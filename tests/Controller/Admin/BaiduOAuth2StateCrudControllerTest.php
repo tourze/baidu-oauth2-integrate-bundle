@@ -28,8 +28,7 @@ final class BaiduOAuth2StateCrudControllerTest extends AbstractEasyAdminControll
 
     public function testValidationErrors(): void
     {
-        $client = self::createClientWithDatabase();
-        $this->loginAsAdmin($client);
+        $client = self::createAuthenticatedClient();
 
         // 创建一个无效的实体进行验证测试
         // BaiduOAuth2State 的构造函数需要 state 和 config 参数

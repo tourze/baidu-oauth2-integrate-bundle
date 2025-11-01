@@ -25,8 +25,7 @@ final class BaiduOAuth2ConfigCrudControllerTest extends AbstractEasyAdminControl
 
     public function testValidationErrors(): void
     {
-        $client = self::createClientWithDatabase();
-        $this->loginAsAdmin($client);
+        $client = self::createAuthenticatedClient();
 
         // 创建一个无效的实体进行验证测试
         $config = new BaiduOAuth2Config();
