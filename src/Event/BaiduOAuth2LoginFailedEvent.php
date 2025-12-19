@@ -6,7 +6,7 @@ namespace Tourze\BaiduOauth2IntegrateBundle\Event;
 
 use Symfony\Contracts\EventDispatcher\Event;
 
-class BaiduOAuth2LoginFailedEvent extends Event
+final class BaiduOAuth2LoginFailedEvent extends Event
 {
     /**
      * @param array<string, mixed> $context

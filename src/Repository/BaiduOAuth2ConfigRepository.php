@@ -17,7 +17,7 @@ use Tourze\PHPUnitSymfonyKernelTest\Attribute\AsRepository;
  * @method void clearCache()
  */
 #[AsRepository(entityClass: BaiduOAuth2Config::class)]
-class BaiduOAuth2ConfigRepository extends ServiceEntityRepository
+final class BaiduOAuth2ConfigRepository extends ServiceEntityRepository
 {
     private const CACHE_TTL = 3600;
     private const CACHE_KEY_VALID_CONFIG = 'baidu_oauth2.valid_config';

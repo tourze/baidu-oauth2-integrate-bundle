@@ -171,13 +171,13 @@ final class BaiduOAuth2ConfigRepositoryTest extends AbstractRepositoryTestCase
     public function testClearCacheMethodExists(): void
     {
         $repository = $this->getRepository();
+        $this->assertInstanceOf(BaiduOAuth2ConfigRepository::class, $repository);
 
         // 验证方法调用成功，没有异常抛出
-        $this->expectNotToPerformAssertions();
-
-        // 直接调用clearCache方法，如果存在则不会抛异常
-        /** @phpstan-ignore method.notFound */
         $repository->clearCache();
+
+        // 验证调用成功（没有抛出异常）
+        $this->assertTrue(true);
     }
 
     public function testFindValidConfigWithCacheHit(): void

@@ -13,7 +13,7 @@ use Tourze\PHPUnitSymfonyKernelTest\Attribute\AsRepository;
  * @extends ServiceEntityRepository<BaiduOAuth2User>
  */
 #[AsRepository(entityClass: BaiduOAuth2User::class)]
-class BaiduOAuth2UserRepository extends ServiceEntityRepository
+final class BaiduOAuth2UserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

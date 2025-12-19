@@ -1,29 +1,14 @@
 services:
+  # default configuration for services in *this* file
   _defaults:
-    autowire: true
-    autoconfigure: true
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
     public: false
 
-  # Controllers (auto-register + controller args)
   Tourze\BaiduOauth2IntegrateBundle\Controller\:
     resource: '../../Controller/'
-    tags: ['controller.service_arguments']
-
-  # Services (auto-register whole namespace)
-  Tourze\BaiduOauth2IntegrateBundle\Service\:
-    resource: '../../Service/'
-
-  # Repositories (auto-register and tag as doctrine repositories)
   Tourze\BaiduOauth2IntegrateBundle\Repository\:
     resource: '../../Repository/'
-    tags: ['doctrine.repository_service']
-
-  # Make repositories public for testing
-  Tourze\BaiduOauth2IntegrateBundle\Repository\BaiduOAuth2ConfigRepository:
-    public: true
-
-  Tourze\BaiduOauth2IntegrateBundle\Repository\BaiduOAuth2StateRepository:
-    public: true
-
-  Tourze\BaiduOauth2IntegrateBundle\Repository\BaiduOAuth2UserRepository:
+  Tourze\BaiduOauth2IntegrateBundle\Service\:
+    resource: '../../Service/'
     public: true

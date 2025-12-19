@@ -6,6 +6,7 @@ namespace Tourze\BaiduOauth2IntegrateBundle\Tests\Controller\Admin;
 
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -117,10 +118,8 @@ final class BaiduOAuth2StateCrudControllerTest extends AbstractEasyAdminControll
      * 根本原因：
      * 实体只有业务方法（如markAsUsed()），缺少标准setter。
      * EasyAdmin的内联编辑依赖PropertyAccess组件，需要标准的getter/setter对。
-     *
-     * @dataProvider provideBooleanFieldsFromController
-     * @phpstan-ignore-next-line PreferTestWithAttribute.ComplexDataProvider
      */
+    #[DataProvider('provideBooleanFieldsFromController')]
     public function testBooleanFieldIsWritableForInlineEditing(string $fieldName): void
     {
         // 1. 创建测试实体

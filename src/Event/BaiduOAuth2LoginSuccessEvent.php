@@ -7,7 +7,7 @@ namespace Tourze\BaiduOauth2IntegrateBundle\Event;
 use Symfony\Contracts\EventDispatcher\Event;
 use Tourze\BaiduOauth2IntegrateBundle\Entity\BaiduOAuth2User;
 
-class BaiduOAuth2LoginSuccessEvent extends Event
+final class BaiduOAuth2LoginSuccessEvent extends Event
 {
     public function __construct(
         private readonly BaiduOAuth2User $user,

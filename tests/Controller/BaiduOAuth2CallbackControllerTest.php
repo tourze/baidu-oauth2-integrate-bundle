@@ -6,14 +6,9 @@ use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Tourze\BaiduOauth2IntegrateBundle\Controller\BaiduOAuth2CallbackController;
 use Tourze\BaiduOauth2IntegrateBundle\Entity\BaiduOAuth2Config;
 use Tourze\BaiduOauth2IntegrateBundle\Entity\BaiduOAuth2State;
-use Tourze\BaiduOauth2IntegrateBundle\Service\BaiduApiClient;
-use Tourze\BaiduOauth2IntegrateBundle\Tests\Service\MockHttpClient;
 use Tourze\PHPUnitSymfonyWebTest\AbstractWebTestCase;
 
 /**

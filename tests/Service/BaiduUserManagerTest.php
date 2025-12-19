@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Tourze\BaiduOauth2IntegrateBundle\Tests\Service;
 
-use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Tourze\PHPUnitSymfonyKernelTest\AbstractIntegrationTestCase;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Tourze\BaiduOauth2IntegrateBundle\Entity\BaiduOAuth2Config;
 use Tourze\BaiduOauth2IntegrateBundle\Entity\BaiduOAuth2User;
@@ -20,8 +19,14 @@ use Tourze\BaiduOauth2IntegrateBundle\Service\BaiduUserManager;
  * @internal
  */
 #[CoversClass(BaiduUserManager::class)]
-final class BaiduUserManagerTest extends TestCase
+#[RunTestsInSeparateProcesses]
+final class BaiduUserManagerTest extends AbstractIntegrationTestCase
 {
+    protected function onSetUp(): void
+    {
+        // 基本设置，每个测试中按需创建mock对象
+    }
+
     private function createMockApiClient(): BaiduApiClient
     {
         return new class(self::createMock(HttpClientInterface::class)) extends BaiduApiClient {
@@ -32,31 +37,14 @@ final class BaiduUserManagerTest extends TestCase
         };
     }
 
-    /** @param BaiduOAuth2User[] $returnUsers */
-    private function createMockRepository(?BaiduOAuth2User $returnUser = null, array $returnUsers = []): BaiduOAuth2UserRepository
-    {
-        $mock = $this->createMock(BaiduOAuth2UserRepository::class);
-        $mock->method('find')->willReturnCallback(function ($id) use ($returnUser) {
-            return 123 === $id ? $returnUser : null;
-        });
-        $mock->method('findAll')->willReturn($returnUsers);
-        $mock->method('findByBaiduUid')->willReturn(null);
-
-        return $mock;
-    }
-
-    private function createMockEntityManager(): EntityManagerInterface
-    {
-        return self::createMock(EntityManagerInterface::class);
-    }
-
     public function testMergeUserData(): void
     {
         $api = $this->createMockApiClient();
-        $repo = $this->createMockRepository();
-        $em = $this->createMockEntityManager();
 
-        $manager = new BaiduUserManager($api, $repo, $em);
+        // 注入Mock API客户端到服务容器
+        self::getContainer()->set(BaiduApiClient::class, $api);
+
+        $manager = self::getService(BaiduUserManager::class);
 
         $tokenData = ['access_token' => 'abc', 'expires_in' => 1234];
         $userInfo = ['userid' => 'u1', 'username' => 'name'];
@@ -70,6 +58,14 @@ final class BaiduUserManagerTest extends TestCase
 
     public function testFindUserByIdSuccess(): void
     {
+        $api = $this->createMockApiClient();
+        self::getContainer()->set(BaiduApiClient::class, $api);
+
+        $manager = self::getService(BaiduUserManager::class);
+        $em = self::getService(EntityManagerInterface::class);
+        $repo = self::getService(BaiduOAuth2UserRepository::class);
+
+        // 创建测试数据
         $config = new BaiduOAuth2Config();
         $user = new BaiduOAuth2User();
         $user->setBaiduUid('test_uid');
@@ -77,12 +73,11 @@ final class BaiduUserManagerTest extends TestCase
         $user->setExpiresIn(3600);
         $user->setConfig($config);
 
-        $api = $this->createMockApiClient();
-        $repo = $this->createMockRepository($user);
-        $em = $this->createMockEntityManager();
+        $em->persist($config);
+        $em->persist($user);
+        $em->flush();
 
-        $manager = new BaiduUserManager($api, $repo, $em);
-        $result = $manager->findUserById(123);
+        $result = $manager->findUserById($user->getId());
 
         $this->assertSame($user, $result);
     }
@@ -90,10 +85,9 @@ final class BaiduUserManagerTest extends TestCase
     public function testFindUserByIdNotFound(): void
     {
         $api = $this->createMockApiClient();
-        $repo = $this->createMockRepository();
-        $em = $this->createMockEntityManager();
+        self::getContainer()->set(BaiduApiClient::class, $api);
 
-        $manager = new BaiduUserManager($api, $repo, $em);
+        $manager = self::getService(BaiduUserManager::class);
         $result = $manager->findUserById(999);
 
         $this->assertNull($result);
@@ -102,10 +96,9 @@ final class BaiduUserManagerTest extends TestCase
     public function testFindUserByIdWithNullId(): void
     {
         $api = $this->createMockApiClient();
-        $repo = $this->createMockRepository();
-        $em = $this->createMockEntityManager();
+        self::getContainer()->set(BaiduApiClient::class, $api);
 
-        $manager = new BaiduUserManager($api, $repo, $em);
+        $manager = self::getService(BaiduUserManager::class);
         $result = $manager->findUserById(null);
 
         $this->assertNull($result);
@@ -113,27 +106,59 @@ final class BaiduUserManagerTest extends TestCase
 
     public function testGetAllUsers(): void
     {
+        $api = $this->createMockApiClient();
+        self::getContainer()->set(BaiduApiClient::class, $api);
+
+        $manager = self::getService(BaiduUserManager::class);
+        $em = self::getService(EntityManagerInterface::class);
+        $repo = self::getService(BaiduOAuth2UserRepository::class);
+
+        // 清理可能存在的测试数据
+        $existingUsers = $repo->findAll();
+        foreach ($existingUsers as $user) {
+            if (str_starts_with($user->getBaiduUid(), 'test_uid_getall')) {
+                $em->remove($user);
+            }
+        }
+        $em->flush();
+
+        // 创建测试数据
         $config = new BaiduOAuth2Config();
+        $config->setClientId('test-client-getall');
+        $config->setClientSecret('test-secret-getall');
+
         $user1 = new BaiduOAuth2User();
-        $user1->setBaiduUid('test_uid1');
+        $user1->setBaiduUid('test_uid_getall1');
         $user1->setAccessToken('test_token1');
         $user1->setExpiresIn(3600);
         $user1->setConfig($config);
         $user2 = new BaiduOAuth2User();
-        $user2->setBaiduUid('test_uid2');
+        $user2->setBaiduUid('test_uid_getall2');
         $user2->setAccessToken('test_token2');
         $user2->setExpiresIn(3600);
         $user2->setConfig($config);
-        $users = [$user1, $user2];
 
-        $api = $this->createMockApiClient();
-        $repo = $this->createMockRepository(null, $users);
-        $em = $this->createMockEntityManager();
+        $em->persist($config);
+        $em->persist($user1);
+        $em->persist($user2);
+        $em->flush();
 
-        $manager = new BaiduUserManager($api, $repo, $em);
         $result = $manager->getAllUsers();
 
-        $this->assertSame($users, $result);
+        // 检查我们的测试用户是否在结果中
+        $foundUser1 = false;
+        $foundUser2 = false;
+        foreach ($result as $user) {
+            if ($user->getBaiduUid() === 'test_uid_getall1') {
+                $foundUser1 = true;
+            }
+            if ($user->getBaiduUid() === 'test_uid_getall2') {
+                $foundUser2 = true;
+            }
+        }
+
+        $this->assertTrue($foundUser1, 'User with baiduUid test_uid_getall1 should be found');
+        $this->assertTrue($foundUser2, 'User with baiduUid test_uid_getall2 should be found');
     }
 
     public function testFetchUserInfo(): void
@@ -144,10 +169,10 @@ final class BaiduUserManagerTest extends TestCase
             'content' => '{"userid":"123","username":"testuser","portrait":"abc123"}',
         ]);
 
-        $repo = $this->createMockRepository();
-        $em = $this->createMockEntityManager();
+        // 注入Mock依赖到服务容器
+        self::getContainer()->set(BaiduApiClient::class, $apiClient);
 
-        $manager = new BaiduUserManager($apiClient, $repo, $em);
+        $manager = self::getService(BaiduUserManager::class);
         $result = $manager->fetchUserInfo('test-access-token');
 
         $this->assertIsArray($result);
@@ -158,6 +183,12 @@ final class BaiduUserManagerTest extends TestCase
 
     public function testUpdateOrCreateUser(): void
     {
+        $apiClient = $this->createMockApiClient();
+        self::getContainer()->set(BaiduApiClient::class, $apiClient);
+
+        $manager = self::getService(BaiduUserManager::class);
+        $em = self::getService(EntityManagerInterface::class);
+
         $config = new BaiduOAuth2Config();
         $config->setClientId('test-client');
         $config->setClientSecret('test-secret');
@@ -170,16 +201,9 @@ final class BaiduUserManagerTest extends TestCase
             'portrait' => 'abc123',
         ];
 
-        $repo = $this->createMock(BaiduOAuth2UserRepository::class);
-        $repo->method('findByBaiduUid')->with('test-uid')->willReturn(null);
+        $em->persist($config);
+        $em->flush();
 
-        $em = $this->createMock(EntityManagerInterface::class);
-        $em->expects($this->once())->method('persist');
-        $em->expects($this->once())->method('flush');
-
-        $apiClient = $this->createMockApiClient();
-
-        $manager = new BaiduUserManager($apiClient, $repo, $em);
         $user = $manager->updateOrCreateUser($data, $config);
 
         $this->assertInstanceOf(BaiduOAuth2User::class, $user);

@@ -6,7 +6,7 @@ namespace Tourze\BaiduOauth2IntegrateBundle\DependencyInjection;
 
 use Tourze\SymfonyDependencyServiceLoader\AutoExtension;
 
-class BaiduOauth2IntegrateExtension extends AutoExtension
+final class BaiduOauth2IntegrateExtension extends AutoExtension
 {
     protected function getConfigDir(): string
     {
